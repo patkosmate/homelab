@@ -1,35 +1,29 @@
----
-- hosts: all
-  become: yes
+- name: Fix APT lock issues and update packages
+  hosts: all
+  become: true
   tasks:
+
     - name: Wait for any apt process to finish
-      command: pgrep -x apt || true
-      register: apt_processes
+      shell: "while pgrep -x apt > /dev/null; do sleep 5; done"
       changed_when: false
-      ignore_errors: yes
 
     - name: Ensure apt lock is released
-      shell: |
-        while fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock 2>/dev/null; do
-          echo "Waiting for lock to be released..."
-          sleep 5
-        done
-      when: apt_processes.rc == 0
-
-    - name: Remove apt lock files if present
       file:
         path: "{{ item }}"
         state: absent
       loop:
-        - /var/lib/dpkg/lock-frontend
         - /var/lib/dpkg/lock
+        - /var/lib/dpkg/lock-frontend
         - /var/cache/apt/archives/lock
-      ignore_errors: yes
 
-    - name: update packages
+    - name: Fix any broken dpkg state
+      command: dpkg --configure -a
+      ignore_errors: true
+
+    - name: Update package lists
       apt:
         update_cache: yes
-
+        
     - name: upgrade packages
       apt:
         upgrade: present
