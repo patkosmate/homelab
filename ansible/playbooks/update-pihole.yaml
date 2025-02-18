@@ -3,8 +3,9 @@
   become: yes
   tasks:
     - name: Wait for any apt process to finish
-      command: pgrep -x apt || true
+      command: pgrep -x apt
       register: apt_processes
+      ignore_errors: yes
       changed_when: false
 
     - name: Ensure apt lock is released
@@ -13,7 +14,7 @@
           echo "Waiting for lock to be released..."
           sleep 5
         done
-      when: apt_processes.stdout != ""
+      when: apt_processes.rc == 0
     
     - name: update packages
       apt:
