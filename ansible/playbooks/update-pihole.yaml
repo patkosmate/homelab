@@ -8,13 +8,7 @@
       changed_when: false
 
     - name: Ensure apt lock is released
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - /var/lib/dpkg/lock
-        - /var/lib/dpkg/lock-frontend
-        - /var/cache/apt/archives/lock
+      command: "rm -f /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend /var/cache/apt/archives/lock"
 
     - name: Fix any broken dpkg state
       command: dpkg --configure -a
@@ -23,10 +17,12 @@
     - name: Update package lists
       apt:
         update_cache: yes
-        
-    - name: upgrade packages
+        force_apt_get: yes
+
+    - name: Upgrade packages
       apt:
         upgrade: present
+        force_apt_get: yes
 
-    - name: upgrade pihole
+    - name: Upgrade pihole
       command: pihole -up
