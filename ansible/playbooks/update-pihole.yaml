@@ -1,9 +1,27 @@
 ---
-- hosts: all 
+- hosts: all
   become: yes
   tasks:
-    - name: update and upgrade packages
-      command: sudo apt update && sudo apt upgrade -y
+    - name: Wait for any apt process to finish
+      command: "ps aux | grep '[a]pt' || true"
+      register: apt_processes
+      changed_when: false
+
+    - name: Ensure apt lock is released
+      shell: |
+        while fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock 2>/dev/null; do
+          echo "Waiting for lock to be released..."
+          sleep 5
+        done
+      when: apt_processes.stdout != ""
+    
+    - name: update packages
+      apt:
+        update_cache: yes
+
+    - name: upgrade packages
+      apt:
+        upgrade: present
 
     - name: upgrade pihole
       command: pihole -up
