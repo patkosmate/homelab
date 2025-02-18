@@ -1,36 +1,9 @@
-- name: Fix APT lock issues and update packages
+---
+- name: Update APT package list
   hosts: all
-  become: true  # Run tasks as root
+  become: yes  # Runs as sudo
   tasks:
-
-    - name: Wait for any apt process to finish
-      shell: "while pgrep -x apt > /dev/null; do sleep 5; done"
-      changed_when: false
-
-    - name: Ensure apt lock is released
-      file:
-        path: "{{ item }}"
-        state: absent
-        force: true
-      loop:
-        - /var/lib/dpkg/lock
-        - /var/lib/dpkg/lock-frontend
-        - /var/cache/apt/archives/lock
-      become: true
-
-    - name: Fix any broken dpkg state
-      command: dpkg --configure -a
-      ignore_errors: true
-
-    - name: Update package lists
+    - name: Update apt package cache
       apt:
         update_cache: yes
-        force_apt_get: yes
-
-    - name: Upgrade packages
-      apt:
-        upgrade: present
-        force_apt_get: yes
-
-    - name: Upgrade pihole
-      command: pihole -up
+        
