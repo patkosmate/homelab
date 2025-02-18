@@ -3,7 +3,7 @@
   become: yes
   tasks:
     - name: Wait for any apt process to finish
-      command: "ps aux | grep '[a]pt' || true"
+      command: pgrep -x apt || true
       register: apt_processes
       changed_when: false
 
