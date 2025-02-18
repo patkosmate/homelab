@@ -3,10 +3,10 @@
   become: yes
   tasks:
     - name: Wait for any apt process to finish
-      command: pgrep -x apt
+      command: pgrep -x apt || true
       register: apt_processes
-      ignore_errors: yes
       changed_when: false
+      ignore_errors: yes
 
     - name: Ensure apt lock is released
       shell: |
@@ -15,7 +15,17 @@
           sleep 5
         done
       when: apt_processes.rc == 0
-    
+
+    - name: Remove apt lock files if present
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /var/lib/dpkg/lock-frontend
+        - /var/lib/dpkg/lock
+        - /var/cache/apt/archives/lock
+      ignore_errors: yes
+
     - name: update packages
       apt:
         update_cache: yes
