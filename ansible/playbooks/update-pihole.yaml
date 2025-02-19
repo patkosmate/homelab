@@ -1,9 +1,0 @@
----
-- name: Update APT package list
-  hosts: all
-  become: yes  # Runs as sudo
-  tasks:
-    - name: Update apt package cache
-      apt:
-        update_cache: yes
-        become_user: root
