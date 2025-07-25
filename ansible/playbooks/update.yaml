@@ -8,4 +8,4 @@
 
     - name: upgrade packages
       apt:
-        state: present
+        state: latest
