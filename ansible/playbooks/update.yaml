@@ -8,4 +8,9 @@
 
     - name: upgrade packages
       apt:
+        name: "*"
         state: latest
+
+    - name: upgrade dist
+      apt:
+        upgrade: dist
