@@ -1,0 +1,51 @@
+---
+- hosts: all
+  tasks:
+    - name: get hostname
+      set_fact:
+        remote_hostname: "{{ ansible_hostname }}"
+
+    - name: get cpu usage
+      shell: top -bn1 | grep 'Cpu(s)' | awk '{print $2}'
+      register: cpu_usage
+
+    - name: get ram usage
+      shell: top -bn1 | awk '/MiB Mem/ {printf "%.2f\n", $8/$4 * 100}'
+      register: ram_usage
+
+    - name: get disk usage
+      shell: "df -h --output=pcent / | awk 'NR==2 {print $1}'"
+      register: disk_usage
+
+    - name: send discord message when cpu usage is over 90%
+      uri:
+        url: "https://discordapp.com/api/webhooks/1399660679920881674/S_Htr2HpQIt-HuZz51Fu59Xy_A2nKjIkkFW971HTUS1tEUaCcwL8XayPztcD2EVVfOFN"
+        method: POST
+        body_format: json
+        body: '{"content": "cpu usage on {{ ansible_hostname }} is above 90%!"}'
+        headers:
+          Content-Type: application/json
+        status_code: 204
+      when: cpu_usage.stdout[:-1]|int > 0
+
+    - name: send discord message when ram usage is over 90%
+      uri:
+        url: "https://discordapp.com/api/webhooks/1399660679920881674/S_Htr2HpQIt-HuZz51Fu59Xy_A2nKjIkkFW971HTUS1tEUaCcwL8XayPztcD2EVVfOFN"
+        method: POST
+        body_format: json
+        body: '{"content": "ram usage on {{ ansible_hostname }} is above 90%!"}'
+        headers:
+          Content-Type: application/json
+        status_code: 204
+      when: ram_usage.stdout[:-1]|int > 0
+
+    - name: send discord message when disk space is under 90%
+      uri:
+        url: "https://discordapp.com/api/webhooks/1399660679920881674/S_Htr2HpQIt-HuZz51Fu59Xy_A2nKjIkkFW971HTUS1tEUaCcwL8XayPztcD2EVVfOFN"
+        method: POST
+        body_format: json
+        body: '{"content": "disk space on {{ ansible_hostname }} is under 90%!"}'
+        headers:
+          Content-Type: application/json
+        status_code: 204
+      when: disk_usage.stdout[:-1]|int > 0
