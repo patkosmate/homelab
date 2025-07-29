@@ -2,8 +2,7 @@
 - hosts: all 
   become: yes
   tasks:
-    - name: update packages
+    - name: update dist
       apt:
-        name: "*"
-        state: latest
+        upgrade: dist
         update_cache: yes
